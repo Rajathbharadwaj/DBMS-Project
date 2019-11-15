@@ -30,12 +30,12 @@ app = Flask(__name__,static_folder="excel")
 app.config.update(
     DEBUG = True,
     #Email settings
-    MAIL_SERVER = 'smtp.gmail.com',
+    MAIL_SERVER = 'mysoresilkpalace.com',
     MAIL_PORT = 465,
     MAIL_USE_SSL = True,
-    MAIL_USERNAME = 'rajathrajath940@gmail.com',
-    MAIL_PASSWORD = 'xxxxx',
-    MAIL_DEFAULT_SENDER = 'rajathrajath940@gmail.com'
+    MAIL_USERNAME = 'rajathbharadwaj@mysoresilkpalace.com',
+    MAIL_PASSWORD = 'panduranga89',
+    MAIL_DEFAULT_SENDER = 'rajathbharadwaj@mysoresilkpalace.com'
     )
 mail = Mail(app)
 
@@ -118,14 +118,17 @@ def set_response_headers(response):
 @app.route('/marks_update',methods=['POST'])
 def marks_update():
     cursor = conn.cursor()
-    course_id = str(request.form["course_code"])
+    cursor.execute("SELECT faculty_id,c_code from teach order by datetime desc limit 1")
+    fid_val = cursor.fetchall()
+    #fid_val_id = fid_val[0][0]
+    course_id = str(fid_val[0][1])
     ia1 = int(request.form["Marks_value_1"])
     ia2 = int(request.form["Marks_value_2"])
     ia3 = int(request.form["Marks_value_3"])
     roll_id = str(request.form["roll_id_value"])
-    validation_c_code = cursor.execute("SELECT c_code,roll_id from course,student where c_code=%s and roll_id=%s", [course_id,roll_id])
+    validation_c_code = cursor.execute("SELECT c.c_code,s.roll_id from course c,student s where c.c_code=%s and s.roll_id=%s", [course_id,roll_id])
     if(validation_c_code is not 1):
-        return render_template("marks.html", msg="Course code does not exist")
+        return render_template("marks.html", msg="Course code or roll no. does not exist")
     res = cursor.execute("INSERT into marks (c_code,roll_id,ia1,ia2,ia3) VALUES(%s, %s, %s, %s, %s)", [course_id,roll_id,ia1,ia2,ia3])
     conn.commit()
     if(res is 1):
@@ -221,7 +224,7 @@ def predict(X_img_path, knn_clf = None, model_save_path ="", DIST_THRESH = .45):
 
     is_recognized = [closest_distances[0][i][0] <= DIST_THRESH for i in range(len(X_faces_loc))]
 
-    var = "unknown"
+    var = "404"
     for predd, recc in zip(knn_clf.predict(faces_encodings), is_recognized):
         print(type(str(predd)))
         print(type(recc))
@@ -354,14 +357,14 @@ def send_mail():
     print(roll_id)
     cursor = conn.cursor()
     for i in range(len(roll_id)):
-        cursor.execute("SELECT student_email,parent_email from student_login where binary roll_id=%s",[roll_id[i]])
+        cursor.execute("SELECT student_email from student where binary roll_id=%s",[roll_id[i]])
         email = list(cursor.fetchone())
-        print(type(email[1]))
+        #print(type(email[1]))
         print(email[0])
-        print(email[1])
-        msg = Message('Auto Generated',recipients= [email[0],email[1]])
-        msg.body = "Hi.. " + str(roll_id[i]) + " is present for the lecture of " + "Prof. " +str(teacher_name.split('.',1)[0]) + ", which is held on " + str(excel_date) + "@" + str(time) + "hrs"
-        msg.html = "Hi.. " + str(roll_id[i]) + " is present for the lecture of " + "Prof. " +str(teacher_name .split('.',1)[0])+ ", which is held on " + str(excel_date) + "@" + str(time) + "hrs"
+        #print(email[1])
+        msg = Message('Auto Generated',recipients= [email[0]])
+        msg.body = "Hi.. " + str(roll_id[i]) + " is present for the lecture of " + "Prof. " +str(teacher_name.split('.',1)[0]) + ", which is held on " + str(excel_date) + "at" + str(time) + "hrs"
+        msg.html = "Hi.. " + str(roll_id[i]) + " is present for the lecture of " + "Prof. " +str(teacher_name .split('.',1)[0])+ ", which is held on " + str(excel_date) + "at" + str(time) + "hrs"
         mail.send(msg)
     return "<h1>mail sent<h1>"
 
@@ -382,6 +385,21 @@ def update():
         print(destination)
         file.save(destination)
     return render_template("excel.html",msg="updated successfully")
+
+@app.route('/fetch_marks',methods=['POST'])
+def fetch_marks():
+    roll_id = str(request.form["roll_id_marks"])
+    cursor = conn.cursor()
+    cursor.execute("SELECT faculty_id,c_code from teach order by datetime desc limit 1")
+    fid_val = cursor.fetchall()
+    #fid_val_id = fid_val[0][0]
+    c_code_id = fid_val[0][1]
+    res = cursor.execute("SELECT m.ia1,m.ia2,m.ia3,c.c_code from marks m, course c where c.c_code=%s and m.roll_id=%s",[c_code_id,roll_id])
+    if res is 3:
+        return render_template("excel.html", msg="Result is {0} for IA1, IA2 and IA3 respectively".format(cursor.fetchall()[0]))
+    else:
+        return render_template("excel.html", msg="No result available.")
+
 
 @app.route('/calculate',methods=['POST'])
 def calculate():

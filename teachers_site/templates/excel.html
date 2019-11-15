@@ -89,7 +89,7 @@
             }     
         </style>
 	</head>
-</head>
+<!--</head>-->
 <body>
 	<div class="mainHeading">
 		<h1>Attendance Monitoring System</h1>
@@ -112,7 +112,7 @@
 			<input type="file" name="updated_excel" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required="required">
 			<br><br>
 			<input type="text" name="excel_folder" placeholder="Enter class here" required="required">
-			<input type="submit" class="btn-login" value="Update excel">
+			<input type="submit" class="btn-login" value="Update attendance">
 		</form>
         <p style="font-weight: normal;font-size: 10px;">{{msg}}</p>
 
@@ -128,6 +128,14 @@
         <form action="/logout" method="post">
             <input style="width: 200px;float: right;" type="submit" class="btnfinal" name="logout" value="Logout">
         </form>
+            <br><br>
+        <form action="/fetch_marks" method="post" target="_blank">
+			<h3>Check marks</h3>
+			<input type="text" name="roll_id_marks" placeholder="Enter roll no" required="required">
+            <input type="submit" class="btn-login" value="Show marks">
+		</form>
+        <p style="font-weight: normal;font-size: 20px;">{{msg}}</p>
+
 </div>
 </body>
 </html>
